@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Register | ShopperStyle{% endblock %}
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block body %}
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="brand-mark">S</div>
+        <h1>Create account</h1>
+        <p class="auth-sub">One user account, separate store experience</p>
+
+        {% if error %}
+        <div class="auth-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" class="auth-form">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="letters, numbers, underscore" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Minimum 6 characters" required>
+
+            <button type="submit">Create Account</button>
+        </form>
+
+        <p class="auth-foot">
+            Already have an account?
+            <a href="{{ url_for('login_page') }}">Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
