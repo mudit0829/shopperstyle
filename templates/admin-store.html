@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Admin Store | ShopperStyle{% endblock %}
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-store.css') }}">
+{% endblock %}
+{% block body %}
+<div class="admin-shell">
+    <header class="admin-topbar">
+        <div>
+            <h1>ShopperStyle Admin</h1>
+            <p>Manage products and orders</p>
+        </div>
+        <div class="admin-actions">
+            <span class="welcome-text">Hi, {{ username }}</span>
+            <a href="{{ url_for('store_home') }}" class="ghost-btn">Store</a>
+            <a href="{{ url_for('logout') }}" class="ghost-btn">Logout</a>
+        </div>
+    </header>
+
+    <section class="admin-grid">
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Create Product</h3>
+                <p>Add products for the store</p>
+            </div>
+
+            <label>Title</label>
+            <input id="title" type="text" placeholder="Product title">
+
+            <label>Slug</label>
+            <input id="slug" type="text" placeholder="product-slug">
+
+            <label>Description</label>
+            <textarea id="description" rows="4" placeholder="Short product description"></textarea>
+
+            <div class="two-col">
+                <div>
+                    <label>Price</label>
+                    <input id="price" type="number" min="1" placeholder="Price">
+                </div>
+                <div>
+                    <label>Stock</label>
+                    <input id="stock" type="number" min="0" placeholder="Stock">
+                </div>
+            </div>
+
+            <label>Image URL</label>
+            <input id="imageUrl" type="text" placeholder="https://...">
+
+            <button id="createProductBtn" class="primary-btn">Create Product</button>
+            <div id="productResult" class="status-text"></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Products</h3>
+                <p>Manage created products</p>
+            </div>
+            <div id="productsTable" class="table-wrap">
+                <div class="empty-card small">Loading products...</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <h3>Orders</h3>
+            <p>Update order status</p>
+        </div>
+        <div id="ordersTable" class="table-wrap">
+            <div class="empty-card small">Loading orders...</div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block body_js %}
+<script src="{{ url_for('static', filename='js/admin-store.js') }}"></script>
+{% endblock %}
