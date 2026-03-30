@@ -360,8 +360,10 @@ def login_page():
             return redirect(url_for("store_home"))
         return render_template("store-login.html", error="")
 
-    username = (request.form.get("username") or request.json.get("username") if request.is_json else "").strip()
-    password = (request.form.get("password") or request.json.get("password") if request.is_json else "")
+    data = request.get_json(silent=True) or {}
+
+    username = (request.form.get("username") or data.get("username") or "").strip()
+    password = (request.form.get("password") or data.get("password") or "").strip()
 
     if not username or not password:
         if request.is_json:
@@ -388,7 +390,6 @@ def login_page():
     if request.is_json:
         return jsonify(success=True, redirect=redirect_to)
     return redirect(redirect_to)
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register_page():
