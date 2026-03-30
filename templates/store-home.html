@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Store | ShopperStyle{% endblock %}
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/store.css') }}">
+{% endblock %}
+{% block body %}
+<div class="store-shell">
+    <header class="topbar">
+        <div class="brand-left">
+            <div class="brand-badge">S</div>
+            <div>
+                <h1>ShopperStyle</h1>
+                <p>Premium store dashboard</p>
+            </div>
+        </div>
+
+        <div class="top-actions">
+            <span class="welcome-text">Hi, {{ username }}</span>
+            <a href="{{ url_for('logout') }}" class="ghost-btn">Logout</a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-copy">
+            <span class="hero-chip">Wallet Commerce</span>
+            <h2>Buy cards, redeem balance, and place orders professionally</h2>
+            <p>Separate domain, separate UI, same user account data.</p>
+        </div>
+
+        <div class="wallet-row">
+            <div class="wallet-card">
+                <span>Game Wallet</span>
+                <strong id="gameBalance">0</strong>
+            </div>
+            <div class="wallet-card">
+                <span>Store Wallet</span>
+                <strong id="storeBalance">0</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="action-grid">
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Buy Point Cards</h3>
+                <p>Available values: 10, 50, 100, 200</p>
+            </div>
+
+            <div class="card-values">
+                <button class="card-chip active" data-value="10">10</button>
+                <button class="card-chip" data-value="50">50</button>
+                <button class="card-chip" data-value="100">100</button>
+                <button class="card-chip" data-value="200">200</button>
+            </div>
+
+            <label>Quantity</label>
+            <input id="cardQty" type="number" min="1" value="1">
+
+            <button id="buyCardBtn" class="primary-btn">Buy Card</button>
+            <div id="cardResult" class="status-text"></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Redeem From Game</h3>
+                <p>Move balance from game wallet to store wallet</p>
+            </div>
+
+            <label>Amount</label>
+            <input id="redeemAmount" type="number" min="1" placeholder="Enter amount">
+
+            <button id="redeemBtn" class="dark-btn">Redeem To Store</button>
+            <div id="redeemResult" class="status-text"></div>
+        </div>
+    </section>
+
+    <section class="main-grid">
+        <div class="left-col">
+            <div class="section-head">
+                <div>
+                    <h3>Products</h3>
+                    <p>Professional product grid</p>
+                </div>
+                <button id="refreshProductsBtn" class="ghost-btn">Refresh</button>
+            </div>
+
+            <div id="productsGrid" class="products-grid">
+                <div class="empty-card">Loading products...</div>
+            </div>
+        </div>
+
+        <aside class="right-col">
+            <div class="panel sticky-panel">
+                <div class="panel-head">
+                    <h3>Cart</h3>
+                    <p>Your selected items</p>
+                </div>
+
+                <div id="cartItems" class="cart-items">
+                    <div class="empty-card small">No items in cart</div>
+                </div>
+
+                <div class="cart-total">
+                    <span>Total</span>
+                    <strong id="cartTotal">₹0</strong>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h3>Checkout</h3>
+                    <p>Save address and place order</p>
+                </div>
+
+                <label>Full Name</label>
+                <input id="fullName" type="text" placeholder="Full name">
+
+                <label>Phone</label>
+                <input id="phone" type="text" placeholder="Phone">
+
+                <label>Address Line 1</label>
+                <input id="line1" type="text" placeholder="House, street, locality">
+
+                <div class="two-col">
+                    <div>
+                        <label>City</label>
+                        <input id="city" type="text" placeholder="City">
+                    </div>
+                    <div>
+                        <label>State</label>
+                        <input id="state" type="text" placeholder="State">
+                    </div>
+                </div>
+
+                <div class="two-col">
+                    <div>
+                        <label>Pincode</label>
+                        <input id="pincode" type="text" placeholder="Pincode">
+                    </div>
+                    <div>
+                        <label>Country</label>
+                        <input id="country" type="text" value="India">
+                    </div>
+                </div>
+
+                <label>Note</label>
+                <textarea id="checkoutNote" rows="3" placeholder="Optional note"></textarea>
+
+                <button id="placeOrderBtn" class="primary-btn full-width">Place Order</button>
+                <div id="checkoutResult" class="status-text"></div>
+            </div>
+        </aside>
+    </section>
+
+    <section class="bottom-grid">
+        <div class="panel">
+            <div class="panel-head">
+                <h3>My Orders</h3>
+                <p>Recent store orders</p>
+            </div>
+            <div id="ordersList" class="history-list">
+                <div class="empty-card small">Loading orders...</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h3>Store Wallet History</h3>
+                <p>Recent store transactions</p>
+            </div>
+            <div id="historyList" class="history-list">
+                <div class="empty-card small">Loading history...</div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block body_js %}
+<script src="{{ url_for('static', filename='js/store-home.js') }}"></script>
+{% endblock %}
