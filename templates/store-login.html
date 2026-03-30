@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Login | ShopperStyle{% endblock %}
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block body %}
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="brand-mark">S</div>
+        <h1>ShopperStyle</h1>
+        <p class="auth-sub">Separate ecommerce portal for your users</p>
+
+        {% if error %}
+        <div class="auth-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" class="auth-form">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter username" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter password" required>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="auth-foot">
+            Don’t have an account?
+            <a href="{{ url_for('register_page') }}">Create one</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
