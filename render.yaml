@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: shopperstyle
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    autoDeploy: true
