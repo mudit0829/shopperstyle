@@ -398,8 +398,10 @@ def register_page():
             return redirect(url_for("store_home"))
         return render_template("store-register.html", error="")
 
-    username = (request.form.get("username") or request.json.get("username") if request.is_json else "").strip()
-    password = (request.form.get("password") or request.json.get("password") if request.is_json else "")
+    data = request.get_json(silent=True) or {}
+
+    username = (request.form.get("username") or data.get("username") or "").strip()
+    password = (request.form.get("password") or data.get("password") or "").strip()
 
     if not username or not password:
         if request.is_json:
@@ -413,15 +415,17 @@ def register_page():
         return render_template("store-register.html", error=msg)
 
     if len(password) < 6:
+        msg = "Password must be at least 6 characters"
         if request.is_json:
-            return jsonify(success=False, message="Password must be at least 6 characters"), 400
-        return render_template("store-register.html", error="Password must be at least 6 characters")
+            return jsonify(success=False, message=msg), 400
+        return render_template("store-register.html", error=msg)
 
     existing = User.query.filter_by(username=username).first()
     if existing:
+        msg = "Username already exists"
         if request.is_json:
-            return jsonify(success=False, message="Username already exists"), 400
-        return render_template("store-register.html", error="Username already exists")
+            return jsonify(success=False, message=msg), 400
+        return render_template("store-register.html", error=msg)
 
     user = User(username=username, display_name=username, country="India")
     user.set_password(password)
@@ -435,7 +439,6 @@ def register_page():
     if request.is_json:
         return jsonify(success=True, redirect=url_for("store_home"))
     return redirect(url_for("store_home"))
-
 
 @app.route("/logout")
 def logout():
