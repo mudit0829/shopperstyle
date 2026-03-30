@@ -31,6 +31,7 @@ db = SQLAlchemy(app)
 IST = ZoneInfo("Asia/Kolkata")
 ALLOWED_CARD_VALUES = {10, 50, 100, 200}
 DEFAULT_GAME_WALLET_BALANCE = int(os.environ.get("DEFAULT_GAME_WALLET_BALANCE", "10000"))
+ALLOWED_PRODUCT_TYPES = {"NORMAL", "POINT_CARD"}
 
 
 # ---------------------------------------------------
@@ -232,8 +233,12 @@ class Product(db.Model):
     price = db.Column(db.Integer, nullable=False)
     stock = db.Column(db.Integer, default=0, nullable=False)
     image_url = db.Column(db.String(500))
+    category = db.Column(db.String(100), default="General", nullable=False)
+    product_type = db.Column(db.String(30), default="NORMAL", nullable=False, index=True)
+    card_value = db.Column(db.Integer, nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
 
 
 class UserAddress(db.Model):
@@ -505,11 +510,13 @@ def api_store_products():
             "price": int(p.price or 0),
             "stock": int(p.stock or 0),
             "image_url": p.image_url or "",
+            "category": p.category or "General",
+            "product_type": (p.product_type or "NORMAL").upper(),
+            "card_value": int(p.card_value or 0) if p.card_value else None,
             "is_active": bool(p.is_active),
         }
         for p in products
     ])
-
 
 @app.route("/api/store/buy-card", methods=["POST"])
 @login_required
@@ -711,18 +718,11 @@ def api_store_checkout():
 
     try:
         store_wallet = ensure_store_wallet_for_user(user)
-        address = None
-
-        if address_id not in (None, "", 0, "0"):
-            address = UserAddress.query.filter_by(
-                id=_safe_int(address_id, 0),
-                user_id=user.id
-            ).first()
-            if not address:
-                return jsonify(success=False, message="Address not found"), 404
+        game_wallet = ensure_wallet_for_user(user)
 
         subtotal = 0
         product_rows = []
+        cart_types = set()
 
         for item in items:
             product_id = _safe_int(item.get("product_id") or item.get("productid"), 0)
@@ -735,12 +735,42 @@ def api_store_checkout():
             if not product or not product.is_active:
                 return jsonify(success=False, message="Product not available"), 404
 
-            if int(product.stock or 0) < qty:
-                return jsonify(success=False, message=f"Insufficient stock for {product.title}"), 400
+            product_type = (product.product_type or "NORMAL").upper()
+            cart_types.add(product_type)
+
+            if product_type == "NORMAL":
+                if int(product.stock or 0) < qty:
+                    return jsonify(success=False, message=f"Insufficient stock for {product.title}"), 400
+
+            if product_type == "POINT_CARD":
+                if int(product.card_value or 0) not in ALLOWED_CARD_VALUES:
+                    return jsonify(success=False, message=f"Invalid card setup for {product.title}"), 400
 
             line_total = int(product.price or 0) * qty
             subtotal += line_total
-            product_rows.append((product, qty, line_total))
+            product_rows.append({
+                "product": product,
+                "qty": qty,
+                "line_total": line_total,
+                "product_type": product_type
+            })
+
+        if len(cart_types) > 1:
+            return jsonify(success=False, message="Buy recharge cards separately from physical products"), 400
+
+        only_cards = cart_types == {"POINT_CARD"}
+
+        address = None
+        if not only_cards:
+            if address_id in (None, "", 0, "0"):
+                return jsonify(success=False, message="Address is required for physical products"), 400
+
+            address = UserAddress.query.filter_by(
+                id=_safe_int(address_id, 0),
+                user_id=user.id
+            ).first()
+            if not address:
+                return jsonify(success=False, message="Address not found"), 404
 
         total = subtotal
 
@@ -755,15 +785,21 @@ def api_store_checkout():
             order_code=make_order_code(user.id),
             subtotal=subtotal,
             total=total,
-            status="PLACED",
+            status="DELIVERED" if only_cards else "PLACED",
             payment_mode="STORE_WALLET",
             note=note or None
         )
         db.session.add(order)
         db.session.flush()
 
-        for product, qty, line_total in product_rows:
-            product.stock = int(product.stock or 0) - qty
+        total_cards_added = 0
+
+        for row in product_rows:
+            product = row["product"]
+            qty = row["qty"]
+            line_total = row["line_total"]
+            product_type = row["product_type"]
+
             db.session.add(StoreOrderItem(
                 order_id=order.id,
                 product_id=product.id,
@@ -773,9 +809,45 @@ def api_store_checkout():
                 line_total=line_total
             ))
 
+            if product_type == "NORMAL":
+                product.stock = int(product.stock or 0) - qty
+
+            elif product_type == "POINT_CARD":
+                card_value = int(product.card_value or 0)
+                total_coins = card_value * qty
+                total_cards_added += total_coins
+
+                game_wallet.balance = int(game_wallet.balance or 0) + total_coins
+
+                db.session.add(Transaction(
+                    user_id=user.id,
+                    kind="added",
+                    amount=total_coins,
+                    balance_after=int(game_wallet.balance or 0),
+                    label="Point Card Added",
+                    game_title=product.title,
+                    note=f"Bought {qty} card(s) of {card_value}"
+                ))
+
+                db.session.add(PointCardPurchase(
+                    user_id=user.id,
+                    card_value=card_value,
+                    quantity=qty,
+                    total_coins=total_coins,
+                    payment_status="PAID"
+                ))
+
+                db.session.add(WalletTransfer(
+                    user_id=user.id,
+                    direction="STORE_TO_GAME",
+                    amount=total_coins,
+                    status="SUCCESS",
+                    note=f"Order {order.order_code}"
+                ))
+
         db.session.add(StoreTransaction(
             user_id=user.id,
-            kind="product_purchase",
+            kind="point_card_purchase" if only_cards else "product_purchase",
             amount=total,
             balance_after=int(store_wallet.balance or 0),
             label="Order placed",
@@ -790,12 +862,13 @@ def api_store_checkout():
             message="Order placed successfully",
             order_code=order.order_code,
             total=total,
-            store_balance=int(store_wallet.balance or 0)
+            store_balance=int(store_wallet.balance or 0),
+            game_balance=int(game_wallet.balance or 0) if game_wallet else 0,
+            coins_added=total_cards_added
         )
     except Exception as e:
         db.session.rollback()
         return jsonify(success=False, message=f"Checkout failed: {str(e)}"), 500
-
 
 @app.route("/api/store/orders", methods=["GET"])
 @login_required
@@ -856,12 +929,16 @@ def api_store_history():
 def api_admin_store_products():
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
+
         title = (data.get("title") or "").strip()
         slug = (data.get("slug") or "").strip().lower()
         description = (data.get("description") or "").strip()
         price = _safe_int(data.get("price"), 0)
         stock = _safe_int(data.get("stock"), 0)
         image_url = (data.get("image_url") or data.get("imageurl") or "").strip()
+        category = (data.get("category") or "General").strip() or "General"
+        product_type = (data.get("product_type") or "NORMAL").strip().upper()
+        card_value = _safe_int(data.get("card_value"), 0)
 
         if not title or not slug:
             return jsonify(success=False, message="Title and slug are required"), 400
@@ -869,8 +946,15 @@ def api_admin_store_products():
             return jsonify(success=False, message="Price must be greater than 0"), 400
         if stock < 0:
             return jsonify(success=False, message="Stock cannot be negative"), 400
+        if product_type not in ALLOWED_PRODUCT_TYPES:
+            return jsonify(success=False, message="Invalid product type"), 400
         if Product.query.filter_by(slug=slug).first():
             return jsonify(success=False, message="Slug already exists"), 400
+
+        if product_type == "POINT_CARD":
+            if card_value not in ALLOWED_CARD_VALUES:
+                return jsonify(success=False, message="Card value must be 10, 50, 100, or 200"), 400
+            category = "Recharge Cards"
 
         try:
             product = Product(
@@ -880,6 +964,9 @@ def api_admin_store_products():
                 price=price,
                 stock=stock,
                 image_url=image_url or None,
+                category=category,
+                product_type=product_type,
+                card_value=card_value if product_type == "POINT_CARD" else None,
                 is_active=True
             )
             db.session.add(product)
@@ -899,12 +986,14 @@ def api_admin_store_products():
             "price": int(p.price or 0),
             "stock": int(p.stock or 0),
             "image_url": p.image_url or "",
+            "category": p.category or "General",
+            "product_type": (p.product_type or "NORMAL").upper(),
+            "card_value": int(p.card_value or 0) if p.card_value else None,
             "is_active": bool(p.is_active),
             "created_at": fmt_ist(p.created_at, "%Y-%m-%d %H:%M") if p.created_at else ""
         }
         for p in products
     ])
-
 
 @app.route("/api/admin/store/products/<int:product_id>", methods=["POST"])
 @admin_required
@@ -918,29 +1007,54 @@ def api_admin_store_product_update(product_id):
     try:
         if "title" in data:
             product.title = (data.get("title") or "").strip() or product.title
+
         if "description" in data:
             product.description = (data.get("description") or "").strip() or None
+
         if "price" in data:
             price = _safe_int(data.get("price"), product.price)
             if price <= 0:
                 return jsonify(success=False, message="Price must be greater than 0"), 400
             product.price = price
+
         if "stock" in data:
             stock = _safe_int(data.get("stock"), product.stock)
             if stock < 0:
                 return jsonify(success=False, message="Stock cannot be negative"), 400
             product.stock = stock
+
         if "image_url" in data:
             product.image_url = (data.get("image_url") or "").strip() or None
+
+        if "category" in data:
+            product.category = (data.get("category") or "General").strip() or "General"
+
+        if "product_type" in data:
+            product_type = (data.get("product_type") or "NORMAL").strip().upper()
+            if product_type not in ALLOWED_PRODUCT_TYPES:
+                return jsonify(success=False, message="Invalid product type"), 400
+            product.product_type = product_type
+            if product_type != "POINT_CARD":
+                product.card_value = None
+
+        if "card_value" in data:
+            card_value = _safe_int(data.get("card_value"), 0)
+            if (product.product_type or "NORMAL").upper() == "POINT_CARD":
+                if card_value not in ALLOWED_CARD_VALUES:
+                    return jsonify(success=False, message="Card value must be 10, 50, 100, or 200"), 400
+                product.card_value = card_value
+
         if "is_active" in data:
             product.is_active = bool(data.get("is_active"))
+
+        if (product.product_type or "NORMAL").upper() == "POINT_CARD":
+            product.category = "Recharge Cards"
 
         db.session.commit()
         return jsonify(success=True, message="Product updated")
     except Exception as e:
         db.session.rollback()
         return jsonify(success=False, message=f"Product update failed: {str(e)}"), 500
-
 
 @app.route("/api/admin/store/orders", methods=["GET"])
 @admin_required
