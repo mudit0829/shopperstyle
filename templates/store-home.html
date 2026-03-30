@@ -1,180 +1,231 @@
 {% extends "base.html" %}
-{% block title %}Store | ShopperStyle{% endblock %}
-{% block head_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/store.css') }}">
-{% endblock %}
-{% block body %}
-<div class="store-shell">
-    <header class="topbar">
-        <div class="brand-left">
-            <div class="brand-badge">S</div>
-            <div>
-                <h1>ShopperStyle</h1>
-                <p>Premium store dashboard</p>
-            </div>
-        </div>
+{% block title %}ShopperStyle{% endblock %}
 
-        <div class="top-actions">
-            <span class="welcome-text">Hi, {{ username }}</span>
-            <a href="{{ url_for('logout') }}" class="ghost-btn">Logout</a>
+{% block head_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/store-home.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="store-app">
+    <header class="store-topbar">
+        <div>
+            <div class="tiny-label">Welcome back</div>
+            <h1>ShopperStyle</h1>
         </div>
+        <a href="{{ url_for('logout') }}" class="top-link">Logout</a>
     </header>
 
-    <section class="hero">
-        <div class="hero-copy">
-            <span class="hero-chip">Wallet Commerce</span>
-            <h2>Buy cards, redeem balance, and place orders professionally</h2>
-            <p>Separate domain, separate UI, same user account data.</p>
-        </div>
-
-        <div class="wallet-row">
-            <div class="wallet-card">
-                <span>Game Wallet</span>
-                <strong id="gameBalance">0</strong>
-            </div>
-            <div class="wallet-card">
-                <span>Store Wallet</span>
-                <strong id="storeBalance">0</strong>
-            </div>
+    <section class="hero-card">
+        <div class="hero-text">
+            <p class="hero-kicker">Mobile shopping</p>
+            <h2>Fashion, electronics & recharge cards</h2>
+            <p class="hero-sub">One store wallet, one clean shopping experience.</p>
         </div>
     </section>
 
-    <section class="action-grid">
-        <div class="panel">
-            <div class="panel-head">
-                <h3>Buy Point Cards</h3>
-                <p>Available values: 10, 50, 100, 200</p>
-            </div>
-
-            <div class="card-values">
-                <button class="card-chip active" data-value="10">10</button>
-                <button class="card-chip" data-value="50">50</button>
-                <button class="card-chip" data-value="100">100</button>
-                <button class="card-chip" data-value="200">200</button>
-            </div>
-
-            <label>Quantity</label>
-            <input id="cardQty" type="number" min="1" value="1">
-
-            <button id="buyCardBtn" class="primary-btn">Buy Card</button>
-            <div id="cardResult" class="status-text"></div>
+    <section class="wallet-strip">
+        <div class="wallet-box">
+            <span>Store Wallet</span>
+            <strong id="storeBalance">₹0</strong>
         </div>
-
-        <div class="panel">
-            <div class="panel-head">
-                <h3>Redeem From Game</h3>
-                <p>Move balance from game wallet to store wallet</p>
-            </div>
-
-            <label>Amount</label>
-            <input id="redeemAmount" type="number" min="1" placeholder="Enter amount">
-
-            <button id="redeemBtn" class="dark-btn">Redeem To Store</button>
-            <div id="redeemResult" class="status-text"></div>
+        <div class="wallet-box alt">
+            <span>Game Wallet</span>
+            <strong id="gameBalance">0</strong>
         </div>
     </section>
 
-    <section class="main-grid">
-        <div class="left-col">
-            <div class="section-head">
-                <div>
-                    <h3>Products</h3>
-                    <p>Professional product grid</p>
-                </div>
-                <button id="refreshProductsBtn" class="ghost-btn">Refresh</button>
-            </div>
-
-            <div id="productsGrid" class="products-grid">
-                <div class="empty-card">Loading products...</div>
-            </div>
-        </div>
-
-        <aside class="right-col">
-            <div class="panel sticky-panel">
-                <div class="panel-head">
-                    <h3>Cart</h3>
-                    <p>Your selected items</p>
-                </div>
-
-                <div id="cartItems" class="cart-items">
-                    <div class="empty-card small">No items in cart</div>
-                </div>
-
-                <div class="cart-total">
-                    <span>Total</span>
-                    <strong id="cartTotal">₹0</strong>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-head">
-                    <h3>Checkout</h3>
-                    <p>Save address and place order</p>
-                </div>
-
-                <label>Full Name</label>
-                <input id="fullName" type="text" placeholder="Full name">
-
-                <label>Phone</label>
-                <input id="phone" type="text" placeholder="Phone">
-
-                <label>Address Line 1</label>
-                <input id="line1" type="text" placeholder="House, street, locality">
-
-                <div class="two-col">
-                    <div>
-                        <label>City</label>
-                        <input id="city" type="text" placeholder="City">
-                    </div>
-                    <div>
-                        <label>State</label>
-                        <input id="state" type="text" placeholder="State">
-                    </div>
-                </div>
-
-                <div class="two-col">
-                    <div>
-                        <label>Pincode</label>
-                        <input id="pincode" type="text" placeholder="Pincode">
-                    </div>
-                    <div>
-                        <label>Country</label>
-                        <input id="country" type="text" value="India">
-                    </div>
-                </div>
-
-                <label>Note</label>
-                <textarea id="checkoutNote" rows="3" placeholder="Optional note"></textarea>
-
-                <button id="placeOrderBtn" class="primary-btn full-width">Place Order</button>
-                <div id="checkoutResult" class="status-text"></div>
-            </div>
-        </aside>
+    <section class="search-block">
+        <input id="searchInput" type="text" placeholder="Search products, fashion, electronics...">
     </section>
 
-    <section class="bottom-grid">
-        <div class="panel">
-            <div class="panel-head">
-                <h3>My Orders</h3>
-                <p>Recent store orders</p>
-            </div>
-            <div id="ordersList" class="history-list">
-                <div class="empty-card small">Loading orders...</div>
-            </div>
-        </div>
+    <section class="chips-wrap" id="categoryChips"></section>
 
-        <div class="panel">
-            <div class="panel-head">
-                <h3>Store Wallet History</h3>
-                <p>Recent store transactions</p>
-            </div>
-            <div id="historyList" class="history-list">
-                <div class="empty-card small">Loading history...</div>
-            </div>
-        </div>
+    <section class="section-head">
+        <h3>Products</h3>
+        <span id="cartCountBadge">0 items</span>
     </section>
+
+    <section class="products-grid" id="productsGrid">
+        <div class="loading-card">Loading products...</div>
+    </section>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('store_home') }}" class="active">Home</a>
+        <a href="#" onclick="scrollToProducts(); return false;">Shop</a>
+        <a href="#" onclick="showCartInfo(); return false;">Cart</a>
+        <a href="#" onclick="showWalletInfo(); return false;">Wallet</a>
+    </nav>
 </div>
-{% endblock %}
-{% block body_js %}
-<script src="{{ url_for('static', filename='js/store-home.js') }}"></script>
+
+<script>
+let allProducts = [];
+let activeCategory = "All";
+
+function formatMoney(value) {
+    return "₹" + Number(value || 0).toLocaleString();
+}
+
+function getCart() {
+    try {
+        return JSON.parse(localStorage.getItem("shopperstyle_cart") || "[]");
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveCart(cart) {
+    localStorage.setItem("shopperstyle_cart", JSON.stringify(cart));
+    updateCartCount();
+}
+
+function updateCartCount() {
+    const cart = getCart();
+    const totalQty = cart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+    document.getElementById("cartCountBadge").textContent = `${totalQty} items`;
+}
+
+function addToCart(productId) {
+    const product = allProducts.find(p => Number(p.id) === Number(productId));
+    if (!product) return;
+
+    const cart = getCart();
+    const existing = cart.find(i => Number(i.product_id) === Number(productId));
+
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cart.push({
+            product_id: product.id,
+            qty: 1,
+            title: product.title,
+            price: product.price,
+            product_type: product.product_type
+        });
+    }
+
+    saveCart(cart);
+    alert(product.title + " added to cart");
+}
+
+function scrollToProducts() {
+    document.getElementById("productsGrid").scrollIntoView({ behavior: "smooth" });
+}
+
+function showCartInfo() {
+    const cart = getCart();
+    if (!cart.length) {
+        alert("Cart is empty");
+        return;
+    }
+
+    const text = cart.map(i => `${i.title} x ${i.qty}`).join("\\n");
+    alert("Cart Items:\\n\\n" + text + "\\n\\nCheckout page can be added next.");
+}
+
+function showWalletInfo() {
+    const storeBal = document.getElementById("storeBalance").textContent;
+    const gameBal = document.getElementById("gameBalance").textContent;
+    alert("Store Wallet: " + storeBal + "\\nGame Wallet: " + gameBal);
+}
+
+function renderCategories(products) {
+    const categories = ["All", ...new Set(products.map(p => p.category || "General"))];
+    const wrap = document.getElementById("categoryChips");
+
+    wrap.innerHTML = categories.map(cat => `
+        <button class="chip ${cat === activeCategory ? 'active' : ''}" onclick="setCategory('${cat.replace(/'/g, "\\'")}')">
+            ${cat}
+        </button>
+    `).join("");
+}
+
+function setCategory(category) {
+    activeCategory = category;
+    renderCategories(allProducts);
+    renderProducts();
+}
+
+function getFilteredProducts() {
+    const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+
+    return allProducts.filter(p => {
+        const matchesCategory = activeCategory === "All" || (p.category || "General") === activeCategory;
+        const text = `${p.title} ${p.description || ""} ${p.category || ""}`.toLowerCase();
+        const matchesSearch = !q || text.includes(q);
+        return matchesCategory && matchesSearch;
+    });
+}
+
+function renderProducts() {
+    const grid = document.getElementById("productsGrid");
+    const products = getFilteredProducts();
+
+    if (!products.length) {
+        grid.innerHTML = `<div class="loading-card">No products found</div>`;
+        return;
+    }
+
+    grid.innerHTML = products.map(p => `
+        <article class="product-card">
+            <div class="product-image-wrap">
+                ${p.image_url
+                    ? `<img src="${p.image_url}" alt="${p.title}" class="product-image">`
+                    : `<div class="product-image placeholder">${(p.category || "Shop").slice(0, 2).toUpperCase()}</div>`
+                }
+                <span class="badge ${p.product_type === 'POINT_CARD' ? 'purple' : ''}">
+                    ${p.product_type === 'POINT_CARD' ? 'Recharge Card' : (p.category || 'Product')}
+                </span>
+            </div>
+
+            <div class="product-info">
+                <h4>${p.title}</h4>
+                <p>${p.description || 'Great product for everyday use.'}</p>
+
+                ${p.product_type === 'POINT_CARD' && p.card_value
+                    ? `<div class="mini-note">Adds ${p.card_value} coins to game wallet after purchase</div>`
+                    : ``
+                }
+
+                <div class="product-bottom">
+                    <div>
+                        <strong>${formatMoney(p.price)}</strong>
+                    </div>
+                    <button onclick="addToCart(${p.id})">Add</button>
+                </div>
+            </div>
+        </article>
+    `).join("");
+}
+
+async function loadWallet() {
+    try {
+        const res = await fetch("/api/store/wallet");
+        const data = await res.json();
+        document.getElementById("storeBalance").textContent = formatMoney(data.store_balance || 0);
+        document.getElementById("gameBalance").textContent = Number(data.game_balance || 0).toLocaleString();
+    } catch (e) {
+        document.getElementById("storeBalance").textContent = "₹0";
+        document.getElementById("gameBalance").textContent = "0";
+    }
+}
+
+async function loadProducts() {
+    try {
+        const res = await fetch("/api/store/products");
+        const data = await res.json();
+        allProducts = Array.isArray(data) ? data : [];
+        renderCategories(allProducts);
+        renderProducts();
+        updateCartCount();
+    } catch (e) {
+        document.getElementById("productsGrid").innerHTML = `<div class="loading-card">Failed to load products</div>`;
+    }
+}
+
+document.getElementById("searchInput").addEventListener("input", renderProducts);
+
+loadWallet();
+loadProducts();
+updateCartCount();
+</script>
 {% endblock %}
