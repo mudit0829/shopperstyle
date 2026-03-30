@@ -1,0 +1,120 @@
+:root {
+    --bg1: #081120;
+    --bg2: #0f172a;
+    --panel: rgba(17, 24, 39, 0.82);
+    --line: rgba(255,255,255,0.08);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --primary: #7c3aed;
+    --primary2: #a855f7;
+    --danger: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, system-ui, sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at top left, rgba(124,58,237,.22), transparent 25%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.auth-shell {
+    width: 100%;
+    display: grid;
+    place-items: center;
+}
+
+.auth-card {
+    width: min(460px, 100%);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 30px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+
+.brand-mark {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--primary), var(--primary2));
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+
+.auth-card h1 {
+    margin: 0 0 6px;
+    font-size: 30px;
+}
+
+.auth-sub {
+    margin: 0 0 20px;
+    color: var(--muted);
+}
+
+.auth-form {
+    display: grid;
+    gap: 10px;
+}
+
+.auth-form label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #dbeafe;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    outline: none;
+    background: rgba(255,255,255,0.04);
+    color: white;
+}
+
+.auth-form input:focus {
+    border-color: rgba(168,85,247,.9);
+    box-shadow: 0 0 0 3px rgba(168,85,247,.16);
+}
+
+.auth-form button {
+    margin-top: 8px;
+    padding: 14px;
+    border: 0;
+    border-radius: 14px;
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--primary), var(--primary2));
+}
+
+.auth-error {
+    background: rgba(239,68,68,.12);
+    color: #fecaca;
+    border: 1px solid rgba(239,68,68,.28);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+}
+
+.auth-foot {
+    margin: 18px 0 0;
+    color: var(--muted);
+}
+
+.auth-foot a {
+    color: #d8b4fe;
+    text-decoration: none;
+}
